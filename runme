@@ -1,0 +1,52 @@
+##++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# This file is to create the appropriate links on the given systems
+##++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+HDIR=$HOME;
+CDIR=$PWD;
+PP="Info:"
+
+##++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+## Change to the home directory
+##++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+cd $HDIR; echo "$PP Changing to home directory $PWD";
+
+##++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+## Link the .vim directory and the .vimrc file
+##++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+FILE=".vimrc"
+if [ -e $FILE ] || [ -h $FILE ] ; then \
+  echo "$PP Found file $FILE && deleting"; \
+  rm -rf $FILE;  \
+fi  
+ln -s $CDIR/$FILE $FILE; echo "$PP Creating link for file $FILE";
+
+DIR=".vim"
+if [ -e $DIR ] || [ -h $DIR ] ; then \
+  echo "$PP Found directory $DIR && deleting"; \
+  rm -rf $DIR;  \
+fi  
+ln -s $CDIR/$DIR $DIR; echo "$PP Creating link for directory $DIR";
+
+##++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+## Link the .emacs and .emacs.d directory 
+##++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+FILE=".emacs"
+if [ -e $FILE ] || [ -h $FILE ] ; then \
+  echo "$PP Found file $FILE && deleting"; \
+  rm -rf $FILE;  \
+fi  
+ln -s $CDIR/$FILE $FILE; echo "$PP Creating link for file $FILE";
+
+DIR=".emacs.d"
+if [ -e $DIR ] || [ -h $DIR ] ; then \
+  echo "$PP Found directory $DIR && deleting"; \
+  rm -rf $DIR;  \
+fi  
+ln -s $CDIR/$DIR $DIR; echo "$PP Creating link for directory $DIR";
+
+
+##++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+## Changing back to original directory
+##++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+cd $CDIR; echo "$PP Changing back to $CDIR";
+
