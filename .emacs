@@ -25,3 +25,9 @@
 ;;-----------------------------------------------------------
 (add-to-list 'load-path "~/.emacs.d/matlab-emacs")
 (load-library "matlab-load")
+
+;;-----------------------------------------------------------
+;; This portion is to load the verilog mode  
+;;-----------------------------------------------------------
+(add-to-list 'load-path "~/.emacs.d/verilog-mode")
+(require 'verilog-mode)
