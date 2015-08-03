@@ -77,9 +77,6 @@ Emacs buffer are those starting with “*”."
 
 (setq tabbar-buffer-groups-function 'tabbar-buffer-groups)
 
-;(global-set-key (kbd ) 'tabbar-backward)
-;(global-set-key (kbd ) 'tabbar-forward)
-
-
-
+(global-set-key (kbd "M-s <left>") 'tabbar-backward)
+(global-set-key (kbd "M-s <right>") 'tabbar-forward)
 
