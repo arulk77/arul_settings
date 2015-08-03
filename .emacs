@@ -10,7 +10,8 @@
 (require 'color-theme)
 (color-theme-initialize)
 ;(color-theme-matrix)
-(color-theme-gray30)
+;(color-theme-gray30)
+(color-theme-midnight)
 
 ;;-----------------------------------------------------------
 ;; Evil mode package
@@ -31,3 +32,5 @@
 ;;-----------------------------------------------------------
 (add-to-list 'load-path "~/.emacs.d/verilog-mode")
 (require 'verilog-mode)
+(custom-set-variables
+ '(matlab-shell-command-switches '("-nodesktop -nosplash")))
