@@ -24,15 +24,18 @@
 ;;-----------------------------------------------------------
 (add-to-list 'load-path "~/.emacs.d/verilog-mode")
 (require 'verilog-mode)
-
-;;-----------------------------------------------------------
-;; This section is for verilog mode
-;;-----------------------------------------------------------
 (add-hook 'verilog-mode-hook
       '(lambda ()
          (setq verilog-auto-newline nil)
 ;         (setq verilog-tab-always-indent nil)
       ))
+
+;;-----------------------------------------------------------
+;; This section is for cscope mode 
+;;-----------------------------------------------------------
+(add-to-list 'load-path "~/.emacs.d/xcscope")
+(require 'xcscope)
+(cscope-setup)
 
 ;;-----------------------------------------------------------
 ;; This portion is for the emacs goodies
