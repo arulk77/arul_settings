@@ -4,6 +4,37 @@
 (setq default-tab-width 3)
 
 ;;-----------------------------------------------------------
+;; This portion is to load the matlab code
+;;-----------------------------------------------------------
+(add-to-list 'load-path "~/.emacs.d/matlab-emacs")
+(load-library "matlab-load")
+(custom-set-variables
+ '(matlab-shell-command-switches '("-nodesktop -nosplash")))
+
+;;-----------------------------------------------------------
+;; Evil mode package
+;;-----------------------------------------------------------
+(add-to-list 'load-path "~/.emacs.d/vimmode")
+(add-to-list 'load-path "~/.emacs.d/vimmode/plugins")
+(require 'evil)
+(require 'evil-numbers)
+
+;;-----------------------------------------------------------
+;; This portion is to load the verilog mode  
+;;-----------------------------------------------------------
+(add-to-list 'load-path "~/.emacs.d/verilog-mode")
+(require 'verilog-mode)
+
+;;-----------------------------------------------------------
+;; This section is for verilog mode
+;;-----------------------------------------------------------
+(add-hook 'verilog-mode-hook
+      '(lambda ()
+         (setq verilog-auto-newline nil)
+;         (setq verilog-tab-always-indent nil)
+      ))
+
+;;-----------------------------------------------------------
 ;; This portion is for the emacs goodies
 ;;-----------------------------------------------------------
 (add-to-list 'load-path "~/.emacs.d/emacs-goodies")
@@ -15,13 +46,6 @@
 (require 'color-theme)   
 (color-theme-initialize)
 (color-theme-midnight)
-
-;;-----> Matlab program 
-(require 'matlab)         
-
-;;-----> highlight completion 
-(require 'highlight-completion)
-(require 'highlight-current-line); 
 
 ;;-----> Shell command
 (require 'shell-command)
@@ -56,37 +80,6 @@ Emacs buffer are those starting with “*”."
 ;(global-set-key (kbd ) 'tabbar-backward)
 ;(global-set-key (kbd ) 'tabbar-forward)
 
-(speedbar-change-initial-expansion-list "buffers")
-(global-set-key  [f7] 'speedbar-get-focus)
 
 
-;;-----------------------------------------------------------
-;; This portion is to load the matlab code
-;;-----------------------------------------------------------
-;(add-to-list 'load-path "~/.emacs.d/matlab-emacs")
-;(load-library "matlab-load")
 
-;;-----------------------------------------------------------
-;; Evil mode package
-;;-----------------------------------------------------------
-(add-to-list 'load-path "~/.emacs.d/vimmode")
-(add-to-list 'load-path "~/.emacs.d/vimmode/plugins")
-(require 'evil)
-(require 'evil-numbers)
-
-;;-----------------------------------------------------------
-;; This portion is to load the verilog mode  
-;;-----------------------------------------------------------
-(add-to-list 'load-path "~/.emacs.d/verilog-mode")
-(require 'verilog-mode)
-(custom-set-variables
- '(matlab-shell-command-switches '("-nodesktop -nosplash")))
-
-;;-----------------------------------------------------------
-;; This section is for verilog mode
-;;-----------------------------------------------------------
-(add-hook 'verilog-mode-hook
-      '(lambda ()
-         (setq verilog-auto-newline nil)
-         (setq verilog-tab-always-indent nil)
-      )))
