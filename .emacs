@@ -55,7 +55,7 @@
 
 ;;-----> Tab bar 
 (require 'tabbar)
-(tabbar-mode t)
+;(tabbar-mode t)
 ; define all tabs to be one of 3 possible groups: “Emacs Buffer”, “Dired”,
 ;“User Buffer”.
 
