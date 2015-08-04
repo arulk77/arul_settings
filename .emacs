@@ -48,10 +48,13 @@
 ;;-----> color theme 
 (require 'color-theme)   
 (color-theme-initialize)
-(color-theme-midnight)
+(color-theme-matrix)
 
 ;;-----> Shell command
 (require 'shell-command)
+
+;;-----> highlight symbol 
+(require 'highlight-symbol)
 
 ;;-----> Tab bar 
 (require 'tabbar)
