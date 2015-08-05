@@ -3,6 +3,8 @@
 ;;-----------------------------------------------------------
 (setq default-tab-width 3)
 (windmove-default-keybindings 'meta)
+;(global-set-key "\M-;" 'other-frame)
+(global-set-key (kbd "S-<right>") 'other-frame)
 
 ;;-----------------------------------------------------------
 ;; This portion is to load the matlab code
