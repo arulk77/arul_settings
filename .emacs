@@ -2,6 +2,7 @@
 ;; General settings for the emacs
 ;;-----------------------------------------------------------
 (setq default-tab-width 3)
+(windmove-default-keybindings 'meta)
 
 ;;-----------------------------------------------------------
 ;; This portion is to load the matlab code
@@ -86,3 +87,15 @@ Emacs buffer are those starting with “*”."
 (global-set-key (kbd "M-s <left>") 'tabbar-backward)
 (global-set-key (kbd "M-s <right>") 'tabbar-forward)
 
+;;-----------------------------------------------------------
+;; Locally defined function
+;;-----------------------------------------------------------
+(defun my-set-frame-name ()
+"Prompt the user for a window title, and set the current
+frame's title to that string."
+(interactive)
+(let ((title (read-string "Enter window title: " "emacs (")))
+(if (string-match "\\`emacs ([^)]+\\'" title) ; no trailing close-paren
+(setq title (concat title ")")))
+(set-frame-name title)
+))
