@@ -12,39 +12,38 @@ PP="Info:"
 cd $HDIR; echo "$PP Changing to home directory $PWD";
 
 ##++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+## Function to remove and create a link for a file
+##++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+function rm_file_and_link() {
+	 if [ -e $FILE ] || [ -h $FILE ] ; then \
+		  echo "$PP Found file $FILE && deleting"; \
+		  rm -rf $FILE;  \
+		  fi  
+	 ln -s $CDIR/$FILE $FILE; echo "$PP Creating link for file $FILE";
+}
+
+##++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+## Function to remove and create a link for a directory
+##++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+function rm_dir_and_link() {
+	 if [ -e $DIR ] || [ -h $DIR ] ; then \
+		  echo "$PP Found directory $DIR && deleting"; \
+		  rm -rf $DIR;  \
+		  fi  
+	 ln -s $CDIR/$DIR $DIR; echo "$PP Creating link for directory $DIR";
+}
+
+
 ## Link the .vim directory and the .vimrc file
-##++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-FILE=".vimrc"
-if [ -e $FILE ] || [ -h $FILE ] ; then \
-  echo "$PP Found file $FILE && deleting"; \
-  rm -rf $FILE;  \
-fi  
-ln -s $CDIR/$FILE $FILE; echo "$PP Creating link for file $FILE";
+FILE=".vimrc";rm_file_and_link;
+DIR=".vim";rm_dir_and_link;
 
-DIR=".vim"
-if [ -e $DIR ] || [ -h $DIR ] ; then \
-  echo "$PP Found directory $DIR && deleting"; \
-  rm -rf $DIR;  \
-fi  
-ln -s $CDIR/$DIR $DIR; echo "$PP Creating link for directory $DIR";
-
-##++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ## Link the .emacs and .emacs.d directory 
-##++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-FILE=".emacs"
-if [ -e $FILE ] || [ -h $FILE ] ; then \
-  echo "$PP Found file $FILE && deleting"; \
-  rm -rf $FILE;  \
-fi  
-ln -s $CDIR/$FILE $FILE; echo "$PP Creating link for file $FILE";
+FILE=".emacs";rm_file_and_link;
+DIR=".emacs.d";rm_dir_and_link;
 
-DIR=".emacs.d"
-if [ -e $DIR ] || [ -h $DIR ] ; then \
-  echo "$PP Found directory $DIR && deleting"; \
-  rm -rf $DIR;  \
-fi  
-ln -s $CDIR/$DIR $DIR; echo "$PP Creating link for directory $DIR";
-
+## Link the .ctags file
+FILE=".ctags";rm_file_and_link;
 
 ##++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ## Changing back to original directory
