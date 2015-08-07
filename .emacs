@@ -2,9 +2,15 @@
 ;; General settings for the emacs
 ;;-----------------------------------------------------------
 (setq default-tab-width 3)
+
+;; Key bindings for the emacs
 (windmove-default-keybindings 'meta)
 ;(global-set-key "\M-;" 'other-frame)
 (global-set-key (kbd "S-<right>") 'other-frame)
+
+
+;; Add cuda to c mode
+(add-to-list 'auto-mode-alist '("\\.cu\\'" . c++-mode))
 
 ;;-----------------------------------------------------------
 ;; This portion is to load the matlab code
