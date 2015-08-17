@@ -9,6 +9,9 @@
 ;(global-set-key "\M-;" 'other-frame)
 (global-set-key (kbd "S-<right>") 'other-frame)
 
+;; Add cuda to c mode
+(add-to-list 'auto-mode-alist '("\\.cu\\'" . c++-mode))
+
 ;;-----------------------------------------------------------
 ;; Remove unwanted files
 ;;-----------------------------------------------------------
