@@ -1,10 +1,43 @@
 ;;-----------------------------------------------------------
 ;; General settings for the emacs
 ;;-----------------------------------------------------------
+;; For server mode operation
+(setq server-use-tcp t)
 (setq default-tab-width 3)
+
 (windmove-default-keybindings 'meta)
 ;(global-set-key "\M-;" 'other-frame)
 (global-set-key (kbd "S-<right>") 'other-frame)
+
+;;-----------------------------------------------------------
+;; Remove unwanted files
+;;-----------------------------------------------------------
+;; Makes *scratch* empty.
+(setq initial-scratch-message "")
+
+;; Removes *scratch* from buffer after the mode has been set.
+(defun remove-scratch-buffer ()
+  (if (get-buffer "*scratch*")
+      (kill-buffer "*scratch*")))
+(add-hook 'after-change-major-mode-hook 'remove-scratch-buffer)
+
+;; Removes *messages* from the buffer.
+(setq-default message-log-max nil)
+(kill-buffer "*Messages*")
+
+;; Removes *Completions* from buffer after you've opened a file.
+(add-hook 'minibuffer-exit-hook
+      '(lambda ()
+         (let ((buffer "*Completions*"))
+           (and (get-buffer buffer)
+                (kill-buffer buffer)))))
+
+;; Don't show *Buffer list* when opening multiple files at the same time.
+(setq inhibit-startup-buffer-menu t)
+
+;; Show only one active window when opening multiple files at the same time.
+(add-hook 'window-setup-hook 'delete-other-windows)
+
 
 ;;-----------------------------------------------------------
 ;; This portion is to load the matlab code
@@ -12,7 +45,15 @@
 (add-to-list 'load-path "~/.emacs.d/matlab-emacs")
 (load-library "matlab-load")
 (custom-set-variables
- '(matlab-shell-command-switches '("-nodesktop -nosplash")))
+  ;; custom-set-variables was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
+ '(inhibit-startup-screen t)
+ '(matlab-shell-command-switches (quote ("-nodesktop -nosplash")))
+ '(spice-output-local "Gnucap")
+ '(spice-simulator "Gnucap")
+ '(spice-waveform-viewer "Gwave"))
 
 ;;-----------------------------------------------------------
 ;; Evil mode package
@@ -101,3 +142,9 @@ frame's title to that string."
 (setq title (concat title ")")))
 (set-frame-name title)
 ))
+(custom-set-faces
+  ;; custom-set-faces was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
+ )
