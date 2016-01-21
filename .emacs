@@ -9,6 +9,9 @@
 ;(global-set-key "\M-;" 'other-frame)
 (global-set-key (kbd "S-<right>") 'other-frame)
 
+;; Treat _ as a word
+(modify-syntax-entry ?_ "w")
+
 ;; Add cuda to c mode
 (add-to-list 'auto-mode-alist '("\\.cu\\'" . c++-mode))
 
@@ -95,7 +98,7 @@
 ;;-----> color theme 
 (require 'color-theme)   
 (color-theme-initialize)
-(color-theme-matrix)
+;(color-theme-matrix)
 
 ;;-----> Shell command
 (require 'shell-command)
