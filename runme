@@ -45,6 +45,9 @@ DIR=".emacs.d";rm_dir_and_link;
 ## Link the .ctags file
 FILE=".ctags";rm_file_and_link;
 
+## Link the ctags.cnf file
+FILE="ctags.cnf";rm_file_and_link;
+
 ## Link the .bin directory 
 DIR=".bin";rm_dir_and_link;
 
