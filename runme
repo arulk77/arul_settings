@@ -48,6 +48,9 @@ FILE=".ctags";rm_file_and_link;
 ## Link the ctags.cnf file
 FILE="ctags.cnf";rm_file_and_link;
 
+## Link the .cshrc.private file
+FILE=".cshrc.private";rm_file_and_link;
+
 ## Link the .bin directory 
 DIR=".bin";rm_dir_and_link;
 

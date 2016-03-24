@@ -1,0 +1,15 @@
+## This file has aliases specific to me
+
+## Aliases for the linux environment
+alias soc     'source ~/.cshrc'
+alias ls      'ls -p'
+alias ec      'emacsclient -n'
+alias em      'emacs -nw '
+alias cd.     "cd .."
+alias cd..    "cd ../.."
+alias cd...   "cd ../../.."
+alias cd....  "cd ../../../.."
+
+## 
+
+
