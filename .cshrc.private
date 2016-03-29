@@ -1,15 +1,30 @@
-## This file has aliases specific to me
+## This file has aliases and settings specific 
 
+##+++++++++++++++++++++++++++++++++++++++++++++++++
 ## Aliases for the linux environment
+##+++++++++++++++++++++++++++++++++++++++++++++++++
 alias soc     'source ~/.cshrc'
 alias ls      'ls -p'
 alias ec      'emacsclient -n'
 alias em      'emacs -nw '
+
+## aliases for the cd command
 alias cd.     "cd .."
 alias cd..    "cd ../.."
 alias cd...   "cd ../../.."
 alias cd....  "cd ../../../.."
 
-## 
+## Other aliases
+alias rmswp   'find -type f -name  "*~" | xargs rm -f; find -type f -name ".*.swp" | xargs rm -f'
 
+alias mmake 'gmake -I ${HOME}/Makefiles -f ${HOME}/Makefiles/Makefile.top.mk'
 
+##+++++++++++++++++++++++++++++++++++++++++++++++++
+## Path and variables specific to user
+##+++++++++++++++++++++++++++++++++++++++++++++++++
+## Set cdpath for the design
+set hpath=(~ ~/bin)
+set cdpath=($hpath)
+
+## Erase this ^? for vi and emacs
+stty erase '^?'

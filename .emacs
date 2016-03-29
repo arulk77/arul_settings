@@ -3,7 +3,10 @@
 ;;-----------------------------------------------------------
 ;; For server mode operation
 (setq server-use-tcp t)
+
+;; Tab mode
 (setq default-tab-width 3)
+(setq-default indent-tabs-mode nil)
 
 (windmove-default-keybindings 'meta)
 ;(global-set-key "\M-;" 'other-frame)
