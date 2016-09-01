@@ -15,7 +15,7 @@ alias cd...   "cd ../../.."
 alias cd....  "cd ../../../.."
 
 ## Other aliases
-alias rmswp   'find -type f -name  "*~" | xargs rm -f; find -type f -name ".*.swp" | xargs rm -f; find -type f -name "#*" | xargs rm -f; find -type f -name ".#*" '
+alias rmswp   'find -type f -name  "*~" | xargs rm -f; find -type f -name ".*.swp" | xargs rm -f; find -type f -name "#*" | xargs rm -f; find -type f -name ".#*" | xargs rm -f '
 
 alias mmake 'gmake -I ${HOME}/Makefiles -f ${HOME}/Makefiles/Makefile.top.mk'
 
