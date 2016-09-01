@@ -75,13 +75,22 @@
 ;;-----------------------------------------------------------
 ;; This portion is to load the verilog mode  
 ;;-----------------------------------------------------------
+;;
 (add-to-list 'load-path "~/.emacs.d/verilog-mode")
-(require 'verilog-mode)
-(add-hook 'verilog-mode-hook
-      '(lambda ()
-         (setq verilog-auto-newline nil)
-;         (setq verilog-tab-always-indent nil)
-      ))
+(autoload 'verilog-mode "verilog-mode" "Verilog mode" t )
+;; (require 'verilog-mode)
+;; Any files that end in .v, .dv or .sv should be in verilog mode
+(add-to-list 'auto-mode-alist '("\\.[ds]?v\\'" . verilog-mode))
+;;
+;; (add-hook 'verilog-mode-hook
+;;       '(lambda ()
+;;          (setq verilog-auto-newline nil)
+;; ;        (setq verilog-tab-always-indent nil)
+;;       ))
+(defun my-verilog-hook ()
+    (setq indent-tabs-mode nil)
+    (setq tab-width 1))
+(add-hook 'verilog-mode-hook 'my-verilog-hook)
 
 ;;-----------------------------------------------------------
 ;; This section is for cscope mode 
