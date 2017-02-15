@@ -4,9 +4,11 @@
 ## Aliases for the linux environment
 ##+++++++++++++++++++++++++++++++++++++++++++++++++
 alias soc     'source ~/.cshrc'
+alias soa     'source ~/.aliases'
 alias ls      'ls -p'
 alias ec      'emacsclient -n'
 alias em      'emacs -nw '
+alias emb 'emacs -batch --no-site-file -l ~/.emacs.d/verilog-mode/verilog-mode.el \!:1 -f verilog-batch-auto'
 
 ## aliases for the cd command
 alias cd.     "cd .."
@@ -25,6 +27,8 @@ alias mmake 'gmake -I ${HOME}/Makefiles -f ${HOME}/Makefiles/Makefile.top.mk'
 ## Set cdpath for the design
 set hpath=(~ ~/bin)
 set cdpath=($hpath)
+
+setenv PATH "~/bin ${PATH}"
 
 ## Erase this ^? for vi and emacs
 stty erase '^?'
