@@ -16,20 +16,48 @@ my $arg;
 my $csv_file="x.csv";
 my @fields;
 my $wr_file="x.csv.tmp";
+my $temp;
 
 
 ## Variables used globall for verilog
 my @ver_module;
-push @ver_module,"module spi_registers (/*AUTOARG*/";
-push @ver_module,");";
+push @ver_module,"module spi_registers (\n /*AUTOARG*/ \n";
+push @ver_module,");\n";
+push @ver_module,'inlude "reg_parameters.v"';
+push @ver_module,"\n";
 
 ## Basic ports sections
-push @ports,"input sclk";
-push @ports,"input sclk";
+my @ver_ports;
+$temp = "
+input         sclk;
+input         reset_n;
+input  [15:0] address;
+input         write_en;
+input  [15:0] data_in;
+output [15:0] data_out; 
+reg    [15:0] data_out; 
 
+/*AUTOWIRE*/
+";
+push @ver_ports,$temp;
+
+## Template sections
+my @template_reg;
+$temp = "
+
+/*
+basic_reg AUTO_TEMPLATE (
+.strobe (2'b11),
+";
+push @template_reg,$temp;
+
+## Always block to read data 
 my @ver_read_data;
-push @ver_read_data,"always @(*) begin";
-push @
+$temp="
+always @(*) begin
+";
+push @ver_read_data,$temp;
+
 
 ## If no argument passed then stop
 unless (scalar(@ARGV)) { print "\nOops! Need a csv file!\n\n"; exit; }
@@ -74,8 +102,8 @@ my ($reg_def,$reg_attr,$reg_reset);
 my ($reg_field,$reg_danger,$reg_src);
 my ($reg_cs,$reg_apin,$reg_name);;
 my ($reg_offset,$bits,$bit_sz,$tp);
-my (@param_addr,@param_def,@ports);
-my @reg_full_def;
+my (@param_addr,@param_def,@ver_reg_inst);
+my (@reg_inst,@reg_full_def);
 my $sticky_flag = 0;
 my $reg_name_det = 0;
 
@@ -94,18 +122,9 @@ while (my $csv_line = <$TFILE>) {
   my @row = split ",",$csv_line;
 
   $reg_name_det = 0;
-
-  $reg_addr   = $row[0]; 
-  $reg_msb    = $row[1];
-  $reg_lsb    = $row[2];
-  $reg_def    = hex($row[3]); 
-  $reg_attr   = $row[4];
-  $reg_reset  = $row[5];
-  $reg_field  = $row[6];
-  $reg_danger = $row[7];
-  $reg_src    = $row[8];
-  $reg_cs     = $row[9];
-  $reg_apin   = $row[10];
+  $reg_addr   = $row[0]; $reg_msb    = $row[1]; $reg_lsb    = $row[2]; $reg_def    = hex($row[3]); 
+  $reg_attr   = $row[4]; $reg_reset  = $row[5]; $reg_field  = $row[6]; $reg_danger = $row[7];
+  $reg_src    = $row[8]; $reg_cs     = $row[9]; $reg_apin   = $row[10];
 
   ## Triage the script 
   $bits = "[$reg_msb:$reg_lsb]";
@@ -121,10 +140,9 @@ while (my $csv_line = <$TFILE>) {
   
   ## Flag to check if the register name is hit
   if (!($reg_addr eq $prv_reg_addr)) {
-    $prv_reg_addr = $reg_addr; 
-		$prv_reg_name = $reg_name;
-    $reg_name     = $reg_field;
-    $reg_offset   = $reg_addr;
+    $prv_reg_addr = $reg_addr;  $prv_reg_name = $reg_name;
+    $reg_name     = $reg_field; $reg_offset   = $reg_addr;
+
 
     ## Parameters for the address 
     $reg_addr =~ s/h//g;
@@ -133,28 +151,25 @@ while (my $csv_line = <$TFILE>) {
 
     ## Parameters for the default value 
     if($sticky_flag) {
-      $tp = sprintf("parameter DFLT_%-40s = {",$prv_reg_name);
-			$tp .= join(",",reverse @reg_full_def);
-			$tp .= "};\n";
-		  push (@param_def,$tp); 
+      add_param();
+      add_inst();
     }
 
-
     ## Clear up for the next routine
-		undef @reg_full_def;
-		my @reg_full_def;
-
+		undef @reg_inst; my @reg_inst;
+	  undef @reg_full_def; my @reg_full_def;
 
     if($opt_debug) {print DBG "$lno : Found new register $reg_name \n";}
-
     ## Print register offset 
     if($opt_debug) {print DBG "$lno : register name $reg_name with offset value register value is $reg_offset\n";}
 
-		$sticky_flag = 1;
-		$reg_name_det = 1;
+		$sticky_flag = 1; $reg_name_det = 1; 
+    next; ## Skip to next line
   } 
 
 	push(@reg_full_def,sprintf("%d'h%x",$bit_sz,$reg_def)) unless ($reg_name_det);
+
+  ## Populate the 
   
 
  ## Triage if it is reserved field
@@ -168,14 +183,9 @@ while (my $csv_line = <$TFILE>) {
 
 }
 
-## Add the final register
-## Parameters for the default value 
-if($sticky_flag) {
-  $tp = sprintf("parameter DFLT_%-40s = {",$reg_name);
-  $tp .= join(",",reverse @reg_full_def);
-  $tp .= "};\n";
-  push (@param_def,$tp); 
-}
+## copy the same name 
+$prv_reg_name = $reg_name;
+add_param(); add_inst(); add_inst_end();
 
 close($TFILE);
 
@@ -187,7 +197,35 @@ if($opt_param) {
 }
 
 if($opt_autover) {
-	print @ports;
+	print @ver_module;
+	print @ver_ports;
+  print @ver_reg_inst;
+}
+
+## Subroutine to add parameter 
+sub add_param {
+  ## parameters 
+  $tp = sprintf("parameter DFLT_%-40s = {",$prv_reg_name);
+	$tp .= join(",",reverse @reg_full_def);
+	$tp .= "};\n";
+	push (@param_def,$tp); 
+}
+
+## Subroutine to add parameter 
+sub add_inst {
+  add_inst_end();
+  push @reg_inst,@template_reg;
+  push @reg_inst,".reg_addr (ADDR_$prv_reg_name),\n";
+  push @reg_inst,".data_out (dout_$prv_reg_name),\n";
+  push @reg_inst,".rst_data_in (DFLT_$prv_reg_name),\n";
+  push @ver_reg_inst,@reg_inst;
+}
+
+sub add_inst_end {
+  push @ver_reg_inst,"); */\n";
+  push @ver_reg_inst,"basic_reg inst_$prv_reg_name ( /* AUTOINST */ \n";
+  push @ver_reg_inst,");\n\n\n";
+
 }
 
 ## Sub routine for help
