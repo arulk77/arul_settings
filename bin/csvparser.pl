@@ -6,8 +6,6 @@ use File::Basename;
 use Cwd;
 use Cwd 'abs_path';
 use FindBin;
-use Text::CSV_PP;
-use Text::ParseWords;
 
 my $debugFile = "csvparser.debug";
 my $opt_debug=0;
@@ -17,7 +15,21 @@ my $arg_string;
 my $arg;
 my $csv_file="x.csv";
 my @fields;
-my $temp="x.csv.tmp";
+my $wr_file="x.csv.tmp";
+
+
+## Variables used globall for verilog
+my @ver_module;
+push @ver_module,"module spi_registers (/*AUTOARG*/";
+push @ver_module,");";
+
+## Basic ports sections
+push @ports,"input sclk";
+push @ports,"input sclk";
+
+my @ver_read_data;
+push @ver_read_data,"always @(*) begin";
+push @
 
 ## If no argument passed then stop
 unless (scalar(@ARGV)) { print "\nOops! Need a csv file!\n\n"; exit; }
@@ -40,7 +52,7 @@ for ($i = 0; $i <= $#ARGV; $i++) {
    elsif ($ARGV[$i] =~ /^-param/)             { $opt_param = 1;} 
    elsif ($ARGV[$i] =~ /^-autover/)           { $opt_autover = 1;} 
    elsif ($ARGV[$i] eq "-f")                  { $csv_file = $ARGV[++$i]; }
-   elsif ($ARGV[$i] eq "-o")                  { $temp = $ARGV[++$i]; }
+   elsif ($ARGV[$i] eq "-o")                  { $wr_file = $ARGV[++$i]; }
    else  {die "Cannot decode option $ARGV[$i]"; }
 }
 
@@ -50,17 +62,22 @@ if ($opt_debug) { open (DBG,">$debugFile") or die "Can't append to $debugFile\n\
 
 my $first=1;
 my $prv_reg_addr= "";
+my $prv_reg_name= "";
 
-## Decode the registers 
-## Open the temporary file
-open (my $TFILE, '<', $temp) or die "Cannot open file $temp in read mode";
+## Open the csv file 
+open (my $TFILE, '<', $csv_file) or die "Cannot open file $csv_file in read mode";
 my $lno = 0;
 my @row;
-my ($reg_name,$reg_addr,$reg_field);
-my ($reg_msb,$reg_lsb,$reg_attr,$reg_desc);
-my ($reg_rst,$hval,$reg_offset);
-my $reg_jack = 1;
-my $reg_gen4 = 1;
+
+my ($reg_addr,$reg_msb,$reg_lsb);
+my ($reg_def,$reg_attr,$reg_reset);
+my ($reg_field,$reg_danger,$reg_src);
+my ($reg_cs,$reg_apin,$reg_name);;
+my ($reg_offset,$bits,$bit_sz,$tp);
+my (@param_addr,@param_def,@ports);
+my @reg_full_def;
+my $sticky_flag = 0;
+my $reg_name_det = 0;
 
 ## while (my $csv_line = $csv_parser->getline($FILE) ) {
 while (my $csv_line = <$TFILE>) {
@@ -76,7 +93,9 @@ while (my $csv_line = <$TFILE>) {
   ## my @row = parse_line(q{,},0,$csv_line); 
   my @row = split ",",$csv_line;
 
-  $reg_addr    = $row[0]; 
+  $reg_name_det = 0;
+
+  $reg_addr   = $row[0]; 
   $reg_msb    = $row[1];
   $reg_lsb    = $row[2];
   $reg_def    = hex($row[3]); 
@@ -87,13 +106,13 @@ while (my $csv_line = <$TFILE>) {
   $reg_src    = $row[8];
   $reg_cs     = $row[9];
   $reg_apin   = $row[10];
-	}
 
   ## Triage the script 
-  my $bits = "[$reg_msb:$reg_lsb]";
+  $bits = "[$reg_msb:$reg_lsb]";
   if($reg_msb eq $reg_lsb) {
     $bits = "[$reg_msb]";
   }
+  $bit_sz = $reg_msb-$reg_lsb+1;
 
   ## If there are exception lines do not process 
   if ($row[0] =~ /Offset/) {
@@ -103,41 +122,76 @@ while (my $csv_line = <$TFILE>) {
   ## Flag to check if the register name is hit
   if (!($reg_addr eq $prv_reg_addr)) {
     $prv_reg_addr = $reg_addr; 
+		$prv_reg_name = $reg_name;
     $reg_name     = $reg_field;
     $reg_offset   = $reg_addr;
+
+    ## Parameters for the address 
+    $reg_addr =~ s/h//g;
+    $tp = sprintf("parameter ADDR_%-40s = 16'h%04x;\n",$reg_name,$reg_addr);
+    push (@param_addr,$tp);
+
+    ## Parameters for the default value 
+    if($sticky_flag) {
+      $tp = sprintf("parameter DFLT_%-40s = {",$prv_reg_name);
+			$tp .= join(",",reverse @reg_full_def);
+			$tp .= "};\n";
+		  push (@param_def,$tp); 
+    }
+
+
+    ## Clear up for the next routine
+		undef @reg_full_def;
+		my @reg_full_def;
+
 
     if($opt_debug) {print DBG "$lno : Found new register $reg_name \n";}
 
     ## Print register offset 
     if($opt_debug) {print DBG "$lno : register name $reg_name with offset value register value is $reg_offset\n";}
 
-		## Replace any special space with _ character
-	  $reg_name =~ s/(\s|\[|\])/_/g;	
+		$sticky_flag = 1;
+		$reg_name_det = 1;
   } 
+
+	push(@reg_full_def,sprintf("%d'h%x",$bit_sz,$reg_def)) unless ($reg_name_det);
+  
 
  ## Triage if it is reserved field
  if($reg_field =~ /reserved/ || $reg_field =~ /Reser/) {
-   $reg_acc = "RsvdP";
  }
 
  ## Search and replace string
- $reg_rst =~ s/0b//g;
- $reg_rst =~ s/0x//g;
- $reg_rst =~ s/[X]+/x/g;
+ $reg_reset =~ s/0b//g;
+ $reg_reset =~ s/0x//g;
+ $reg_reset =~ s/[X]+/x/g;
 
- if($reg_acc =~ /Rsvd/g) {
-   $reg_rst = 0;
- }
+}
 
-  ## Print each register specific values 
-  print "$bits,$reg_rst,$reg_acc,yes,Level01,$reg_field,\"$reg_desc\",\n";
+## Add the final register
+## Parameters for the default value 
+if($sticky_flag) {
+  $tp = sprintf("parameter DFLT_%-40s = {",$reg_name);
+  $tp .= join(",",reverse @reg_full_def);
+  $tp .= "};\n";
+  push (@param_def,$tp); 
 }
 
 close($TFILE);
+
+
+## Finally print all the necessary
+if($opt_param) {
+  print @param_addr;
+  print @param_def;
+}
+
+if($opt_autover) {
+	print @ports;
+}
 
 ## Sub routine for help
 sub help {
   print "csvparser [-dbg] [-param] [-autover] -f <csv file name> -o <output file> \n";
 }
-
 
