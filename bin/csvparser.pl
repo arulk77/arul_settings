@@ -136,10 +136,11 @@ my ($reg_cs,$reg_apin,$reg_name);;
 my ($reg_offset,$bits,$bit_sz,$bit_dec);
 my (@tp_arr,$tp);
 my (@param_addr,@param_def,@ver_reg_inst);
-my (@reg_inst,@reg_full_def,@reg_rd_field_data);
+my (@reg_inst,@reg_full_def,@reg_rd_field_data,$mod_reg_field);
 my $sticky_flag = 0;
 my $final_flg = 0;
 my $reg_name_det = 0;
+my %reg_key;
 
 ## while (my $csv_line = $csv_parser->getline($FILE) ) {
 while (my $csv_line = <$TFILE>) {
@@ -170,7 +171,7 @@ while (my $csv_line = <$TFILE>) {
   }
   $bit_sz = $reg_msb-$reg_lsb+1;
   if($bit_sz > 1) {
-    $bit_dec = sprintf("\[%2d:%2d\]",$bit_sz,0);
+    $bit_dec = sprintf("\[%2d:%2d\]",$bit_sz-1,0);
   } else {
     $bit_dec = ""; 
   }
@@ -224,24 +225,14 @@ while (my $csv_line = <$TFILE>) {
     push @reg_rd_field_data,sprintf("%s%s,",$reg_field,$bit_dec); 
   };
 
+  triage_field() unless ($reg_field =~ /reser/i);
+
   if($reg_rwatr =~ /RO/) {
     $tp = sprintf("input  %-15s %-40s;\n",$bit_dec,$reg_field);
   } else {
-    $tp = sprintf("output %-15s %-40s;\n",$bit_dec,$reg_field);
+    $tp = sprintf("output %-15s %-40s;\n",$bit_dec,$reg_field) unless ($reg_field =~ /reser/i);
   }
   push @ver_ports,$tp;
-
-  ## Populate the 
-  
-
- ## Triage if it is reserved field
- if($reg_field =~ /reserved/ || $reg_field =~ /Reser/) {
- }
-
- ## Search and replace string
- $reg_reset =~ s/0b//g;
- $reg_reset =~ s/0x//g;
- $reg_reset =~ s/[X]+/x/g;
 
 }
 
@@ -317,6 +308,28 @@ sub add_data_out {
     } else {
       push @ver_read_data,sprintf("  ADDR_%-40s : data_out = {",$reg_name) unless($final_flg);
     }
+}
+
+sub triage_field {
+  ## Do the register key
+  $mod_reg_field = $reg_field; 
+  $mod_reg_field =~ s/_1\s*$//g; ## Remove the _1 part
+
+  if(!exists $reg_key{$reg_field} ) {
+     $reg_key{$reg_field}{"bit_sz"} = $bit_sz;
+     if($reg_rwatr =~ /RO/) {
+        $reg_key{$reg_field}{"dir"} = "input";
+     } else {
+        $reg_key{$reg_field}{"dir"} = "output";
+     }
+     $reg_key{$reg_field}{"uniq"} = 1;
+     $reg_key{$reg_field}{"bit_dec"} = $bit_dec; 
+     $reg_key{$reg_field}{"bit_sz"} = $bit_sz; 
+  } else {
+     $reg_key{$reg_field}{"uniq"} = 0;
+     ## $reg_key{$reg_field}{"bit_sz"} = $reg_key{$reg_field}{"bit_sz"} + $bit_sz; 
+     $reg_key{$reg_field}{"bit_sz"} += $bit_sz; 
+  } 
 }
 
 ## Sub routine for help
