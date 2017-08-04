@@ -19,14 +19,18 @@ my $wr_file="x.csv.tmp";
 my $temp;
 
 
+##+++++++++++++++++++++++++++++++++++++++++++++
 ## Variables used globall for verilog
+##+++++++++++++++++++++++++++++++++++++++++++++
 my @ver_module;
 push @ver_module,"module spi_registers (\n /*AUTOARG*/ \n";
 push @ver_module,");\n";
-push @ver_module,'inlude "reg_parameters.v"';
+push @ver_module,'`include "reg_parameters.v"';
 push @ver_module,"\n";
 
+##+++++++++++++++++++++++++++++++++++++++++++++
 ## Basic ports sections
+##+++++++++++++++++++++++++++++++++++++++++++++
 my @ver_ports;
 $temp = "
 input         sclk;
@@ -37,11 +41,19 @@ input  [15:0] data_in;
 output [15:0] data_out; 
 reg    [15:0] data_out; 
 
-/*AUTOWIRE*/
+// Input and output ports as part of the register interface 
 ";
 push @ver_ports,$temp;
 
+my @ver_out_ports_assign;
+$temp ='
+// Routing bit fields to output ports
+';
+push @ver_out_ports_assign,$temp;
+
+##+++++++++++++++++++++++++++++++++++++++++++++
 ## Template sections
+##+++++++++++++++++++++++++++++++++++++++++++++
 my @template_reg;
 $temp = "
 
@@ -51,12 +63,32 @@ basic_reg AUTO_TEMPLATE (
 ";
 push @template_reg,$temp;
 
+##+++++++++++++++++++++++++++++++++++++++++++++
 ## Always block to read data 
+##+++++++++++++++++++++++++++++++++++++++++++++
 my @ver_read_data;
 $temp="
 always @(*) begin
+case (address) 
 ";
 push @ver_read_data,$temp;
+
+##+++++++++++++++++++++++++++++++++++++++++++++
+## End of module declaration
+##+++++++++++++++++++++++++++++++++++++++++++++
+my @ver_end;
+$temp='};
+  // Any undefined registers return 0
+  default: data_out = 16'."'d0;".'
+endcase
+end
+
+endmodule
+// Local Variables:
+// verilog-library-directories:("." "./comp")
+// End:
+';
+push @ver_end,$temp;
 
 
 ## If no argument passed then stop
@@ -98,13 +130,15 @@ my $lno = 0;
 my @row;
 
 my ($reg_addr,$reg_msb,$reg_lsb);
-my ($reg_def,$reg_attr,$reg_reset);
+my ($reg_def,$reg_rwatr,$reg_reset);
 my ($reg_field,$reg_danger,$reg_src);
 my ($reg_cs,$reg_apin,$reg_name);;
-my ($reg_offset,$bits,$bit_sz,$tp);
+my ($reg_offset,$bits,$bit_sz,$bit_dec);
+my (@tp_arr,$tp);
 my (@param_addr,@param_def,@ver_reg_inst);
-my (@reg_inst,@reg_full_def);
+my (@reg_inst,@reg_full_def,@reg_rd_field_data);
 my $sticky_flag = 0;
+my $final_flg = 0;
 my $reg_name_det = 0;
 
 ## while (my $csv_line = $csv_parser->getline($FILE) ) {
@@ -123,8 +157,11 @@ while (my $csv_line = <$TFILE>) {
 
   $reg_name_det = 0;
   $reg_addr   = $row[0]; $reg_msb    = $row[1]; $reg_lsb    = $row[2]; $reg_def    = hex($row[3]); 
-  $reg_attr   = $row[4]; $reg_reset  = $row[5]; $reg_field  = $row[6]; $reg_danger = $row[7];
+  $reg_rwatr  = $row[4]; $reg_reset  = $row[5]; $reg_field  = $row[6]; $reg_danger = $row[7];
   $reg_src    = $row[8]; $reg_cs     = $row[9]; $reg_apin   = $row[10];
+
+  ## Jump  to next if there is nothing on reg_addr
+  next unless($reg_addr =~ m/\S/);
 
   ## Triage the script 
   $bits = "[$reg_msb:$reg_lsb]";
@@ -132,6 +169,11 @@ while (my $csv_line = <$TFILE>) {
     $bits = "[$reg_msb]";
   }
   $bit_sz = $reg_msb-$reg_lsb+1;
+  if($bit_sz > 1) {
+    $bit_dec = sprintf("\[%2d:%2d\]",$bit_sz,0);
+  } else {
+    $bit_dec = ""; 
+  }
 
   ## If there are exception lines do not process 
   if ($row[0] =~ /Offset/) {
@@ -154,10 +196,12 @@ while (my $csv_line = <$TFILE>) {
       add_param();
       add_inst();
     }
+    add_data_out();
 
     ## Clear up for the next routine
 		undef @reg_inst; my @reg_inst;
 	  undef @reg_full_def; my @reg_full_def;
+    undef @reg_rd_field_data; my @reg_rd_fied_data;
 
     if($opt_debug) {print DBG "$lno : Found new register $reg_name \n";}
     ## Print register offset 
@@ -167,7 +211,25 @@ while (my $csv_line = <$TFILE>) {
     next; ## Skip to next line
   } 
 
+  ## assign statement for output 
 	push(@reg_full_def,sprintf("%d'h%x",$bit_sz,$reg_def)) unless ($reg_name_det);
+  $tp = ""; 
+  $tp = sprintf("assign %-40s = dout_%s%s;\n",$reg_field,$reg_name,$bits) unless ($reg_field =~ /reser/i || $reg_rwatr =~ /RO/);
+  push @ver_out_ports_assign,"$tp";
+
+  ##   
+  if($reg_field =~ /reser/i) {
+    push @reg_rd_field_data,sprintf("%d'h0,",$bit_sz);
+  } else {
+    push @reg_rd_field_data,sprintf("%s%s,",$reg_field,$bit_dec); 
+  };
+
+  if($reg_rwatr =~ /RO/) {
+    $tp = sprintf("input  %-15s %-40s;\n",$bit_dec,$reg_field);
+  } else {
+    $tp = sprintf("output %-15s %-40s;\n",$bit_dec,$reg_field);
+  }
+  push @ver_ports,$tp;
 
   ## Populate the 
   
@@ -183,9 +245,14 @@ while (my $csv_line = <$TFILE>) {
 
 }
 
+## End stuff to populate
 ## copy the same name 
 $prv_reg_name = $reg_name;
-add_param(); add_inst(); add_inst_end();
+$final_flg = 1;
+add_param(); add_inst();
+add_data_out();
+push @ver_ports,"/*AUTOWIRE*/";
+
 
 close($TFILE);
 
@@ -200,7 +267,18 @@ if($opt_autover) {
 	print @ver_module;
 	print @ver_ports;
   print @ver_reg_inst;
+  print @ver_out_ports_assign;
+  print @ver_read_data;
+  print @ver_end;
 }
+
+
+## End of the main program
+####################################################### 
+
+##++++++++++++++++++++++++++++++++++++++++++++
+## All subroutines for the module 
+##++++++++++++++++++++++++++++++++++++++++++++
 
 ## Subroutine to add parameter 
 sub add_param {
@@ -213,19 +291,32 @@ sub add_param {
 
 ## Subroutine to add parameter 
 sub add_inst {
-  add_inst_end();
   push @reg_inst,@template_reg;
-  push @reg_inst,".reg_addr (ADDR_$prv_reg_name),\n";
-  push @reg_inst,".data_out (dout_$prv_reg_name),\n";
-  push @reg_inst,".rst_data_in (DFLT_$prv_reg_name),\n";
-  push @ver_reg_inst,@reg_inst;
+  push (@reg_inst,".reg_addr    (ADDR_$prv_reg_name\[\]),\n");
+  push (@reg_inst,".data_out    (dout_$prv_reg_name\[\]),\n");
+  push (@reg_inst,".rst_data_in (DFLT_$prv_reg_name\[\]),\n");
+  push (@reg_inst,".\\(.*\\)    (\\1\[\]),\n");
+  push (@ver_reg_inst,@reg_inst);
+  add_inst_end();
 }
 
 sub add_inst_end {
   push @ver_reg_inst,"); */\n";
-  push @ver_reg_inst,"basic_reg inst_$prv_reg_name ( /* AUTOINST */ \n";
+  push @ver_reg_inst,"basic_reg inst_$prv_reg_name ( /*AUTOINST*/ \n";
   push @ver_reg_inst,");\n\n\n";
 
+}
+
+sub add_data_out {
+    if($sticky_flag) {
+      undef @tp_arr; my @tp_arr;
+      push @tp_arr,reverse @reg_rd_field_data;
+      $tp = "@tp_arr"; $tp =~ s/,$//g;
+      push @ver_read_data,$tp;
+      push @ver_read_data,sprintf("};\n  ADDR_%-40s : data_out = {",$reg_name) unless ($final_flg);
+    } else {
+      push @ver_read_data,sprintf("  ADDR_%-40s : data_out = {",$reg_name) unless($final_flg);
+    }
 }
 
 ## Sub routine for help
