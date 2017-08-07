@@ -240,8 +240,9 @@ while (my $csv_line = <$TFILE>) {
 ## copy the same name 
 $prv_reg_name = $reg_name;
 $final_flg = 1;
-add_param(); add_inst();
-add_data_out();
+add_param(); add_inst(); add_data_out();
+add_ports();
+
 push @ver_ports,"/*AUTOWIRE*/";
 
 
@@ -326,11 +327,14 @@ sub triage_field {
      $reg_key{$reg_field}{"bit_dec"} = $bit_dec; 
      $reg_key{$reg_field}{"bit_sz"} = $bit_sz; 
   } else {
-     $reg_key{$reg_field}{"uniq"} = 0;
+     $reg_key{$reg_field}{"uniq"} += 1; 
      ## $reg_key{$reg_field}{"bit_sz"} = $reg_key{$reg_field}{"bit_sz"} + $bit_sz; 
      $reg_key{$reg_field}{"bit_sz"} += $bit_sz; 
   } 
 }
+
+sub add_ports {
+} 
 
 ## Sub routine for help
 sub help {
