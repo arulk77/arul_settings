@@ -215,7 +215,7 @@ while (my $csv_line = <$TFILE>) {
   ## assign statement for output 
 	push(@reg_full_def,sprintf("%d'h%x",$bit_sz,$reg_def)) unless ($reg_name_det);
   $tp = ""; 
-  $tp = sprintf("assign %-40s = dout_%s%s;\n",$reg_field,$reg_name,$bits) unless ($reg_field =~ /reser/i || $reg_rwatr =~ /RO/);
+  $tp = sprintf("wire %-10s %-40s = dout_%s%s;\n",$bit_dec,$reg_field,$reg_name,$bits) unless ($reg_field =~ /reser/i || $reg_rwatr =~ /RO/);
   push @ver_out_ports_assign,"$tp";
 
   ##   
@@ -235,7 +235,7 @@ while (my $csv_line = <$TFILE>) {
 $prv_reg_name = $reg_name;
 $final_flg = 1;
 add_param(); add_inst(); add_data_out();
-add_ports();
+add_ports_and_concatenate();
 
 push @ver_ports,"/*AUTOWIRE*/";
 
@@ -325,18 +325,35 @@ sub triage_field {
      $reg_key{$reg_field}{"uniq"} += 1; 
      ## $reg_key{$reg_field}{"bit_sz"} = $reg_key{$reg_field}{"bit_sz"} + $bit_sz; 
      $reg_key{$reg_field}{"bit_sz"} += $bit_sz; 
-     $reg_key{$reg_field}{"bit_dec"} = sprintf("\[%2d:%2d\]",$bit_sz-1,0);
+     $reg_key{$reg_field}{"bit_dec"} = sprintf("\[%2d:%2d\]",$reg_key{$reg_field}{"bit_sz"}-1,0);
   } 
 }
 
-sub add_ports {
+sub add_ports_and_concatenate {
+  $tp = "\n\n// Add concatenated ports \n"; 
+  push @ver_out_ports_assign,$tp;
+
   foreach $key (keys %reg_key) {
     if($reg_key{$key}{"dir"} =~ /input/) {
-      $tp = sprintf("input  %-15s %-40s;\n",$bit_dec,$key);
+      $tp = sprintf("input  %-15s %-40s;\n",$reg_key{$key}{"bit_dec"},$key);
     } else {
-      $tp = sprintf("output %-15s %-40s;\n",$bit_dec,$key);
+      $tp = sprintf("output %-15s %-40s;\n",$reg_key{$key}{"bit_dec"},$key);
     }
     push @ver_ports,$tp;
+
+    ## Add concatenated outputs
+    if($reg_key{$key}{"dir"} =~ /output/) {
+      if($reg_key{$key}{"uniq"} > 1) {
+        $tp = sprintf("assign %-40s = {",$key);
+        for(my $i=$reg_key{$key}{"uniq"};$i>0;$i=$i-1) {
+         $tp .= "$key";
+         $tp .= "_$i,";
+        }
+        $tp =~ s/,$//; $tp .= "};\n";
+        push @ver_out_ports_assign,$tp;
+      }
+      
+    }
   }
 } 
 
