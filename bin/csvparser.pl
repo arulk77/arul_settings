@@ -134,7 +134,7 @@ my ($reg_def,$reg_rwatr,$reg_reset);
 my ($reg_field,$reg_danger,$reg_src);
 my ($reg_cs,$reg_apin,$reg_name);;
 my ($reg_offset,$bits,$bit_sz,$bit_dec);
-my (@tp_arr,$tp);
+my (@tp_arr,$tp,$key);
 my (@param_addr,@param_def,@ver_reg_inst);
 my (@reg_inst,@reg_full_def,@reg_rd_field_data,$mod_reg_field);
 my $sticky_flag = 0;
@@ -227,12 +227,6 @@ while (my $csv_line = <$TFILE>) {
 
   triage_field() unless ($reg_field =~ /reser/i);
 
-  if($reg_rwatr =~ /RO/) {
-    $tp = sprintf("input  %-15s %-40s;\n",$bit_dec,$reg_field);
-  } else {
-    $tp = sprintf("output %-15s %-40s;\n",$bit_dec,$reg_field) unless ($reg_field =~ /reser/i);
-  }
-  push @ver_ports,$tp;
 
 }
 
@@ -314,7 +308,8 @@ sub add_data_out {
 sub triage_field {
   ## Do the register key
   $mod_reg_field = $reg_field; 
-  $mod_reg_field =~ s/_1\s*$//g; ## Remove the _1 part
+  $mod_reg_field =~ s/_[0-9]+\s*$//g; ## Remove the _1 part
+  $reg_field = $mod_reg_field;
 
   if(!exists $reg_key{$reg_field} ) {
      $reg_key{$reg_field}{"bit_sz"} = $bit_sz;
@@ -330,10 +325,19 @@ sub triage_field {
      $reg_key{$reg_field}{"uniq"} += 1; 
      ## $reg_key{$reg_field}{"bit_sz"} = $reg_key{$reg_field}{"bit_sz"} + $bit_sz; 
      $reg_key{$reg_field}{"bit_sz"} += $bit_sz; 
+     $reg_key{$reg_field}{"bit_dec"} = sprintf("\[%2d:%2d\]",$bit_sz-1,0);
   } 
 }
 
 sub add_ports {
+  foreach $key (keys %reg_key) {
+    if($reg_key{$key}{"dir"} =~ /input/) {
+      $tp = sprintf("input  %-15s %-40s;\n",$bit_dec,$key);
+    } else {
+      $tp = sprintf("output %-15s %-40s;\n",$bit_dec,$key);
+    }
+    push @ver_ports,$tp;
+  }
 } 
 
 ## Sub routine for help
