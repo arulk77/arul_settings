@@ -4,22 +4,34 @@
 ## Aliases for the linux environment
 ##+++++++++++++++++++++++++++++++++++++++++++++++++
 alias soc     'source ~/.cshrc'
+alias socp    'source ~/.cshrc.private'
 alias soa     'source ~/.aliases'
 alias ls      'ls -p'
+alias lsf     'find ./ -type f -size +0 \!:*' 
+alias le      'less'
 alias ec      'emacsclient -n'
 alias em      'emacs -nw '
-alias emb 'emacs -batch --no-site-file -l ~/.emacs.d/verilog-mode/verilog-mode.el \!:1 -f verilog-batch-auto'
+alias emb     'emacs -batch --no-site-file -l ~/.emacs.d/verilog-mode/verilog-mode.el \!:1 -f verilog-batch-auto'
 
 ## aliases for the cd command
 alias cd.     "cd .."
 alias cd..    "cd ../.."
 alias cd...   "cd ../../.."
 alias cd....  "cd ../../../.."
+alias cd..... "cd ../../../../.."
+alias cd5     "cd ../../../../.."
+alias cd4     "cd ../../../.."
 
 ## Other aliases
 alias rmswp   'find -type f -name  "*~" | xargs rm -f; find -type f -name ".*.swp" | xargs rm -f; find -type f -name "#*" | xargs rm -f; find -type f -name ".#*" | xargs rm -f '
 
+## Tools aliases 
 alias mmake 'gmake -I ${HOME}/Makefiles -f ${HOME}/Makefiles/Makefile.top.mk'
+alias ctex 'pdflatex \!:1.tex && xpdf \!:1.pdf'
+alias pl   "awk "'{NR>=\!:1&&NR<=\!:1+\!:2{print NR; print $0}NR>\!:2{exit}}'
+
+## Aliases useful for linux
+alias h 'history'
 
 ##+++++++++++++++++++++++++++++++++++++++++++++++++
 ## Path and variables specific to user
@@ -27,8 +39,9 @@ alias mmake 'gmake -I ${HOME}/Makefiles -f ${HOME}/Makefiles/Makefile.top.mk'
 ## Set cdpath for the design
 set hpath=(~ ~/bin)
 set cdpath=($hpath)
-
 setenv PATH "~/bin ${PATH}"
+
+set prompt="%B%/ >%b"
 
 ## Erase this ^? for vi and emacs
 stty erase '^?'
